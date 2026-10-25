@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#e8f0ec" />
+  <title>Anti-Doomscroll</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-top: #e8f0ec;
+      --bg-bottom: #d4e4dc;
+      --ink: #1c2b26;
+      --ink-soft: #4a5c55;
+      --muted: #6b7f76;
+      --line: rgba(28, 43, 38, 0.12);
+      --surface: rgba(255, 255, 255, 0.72);
+      --surface-solid: #f7faf8;
+      --accent: #2f6b5a;
+      --accent-soft: #d7ebe3;
+      --warn: #8a5a3a;
+      --danger-soft: #f3e6df;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(28, 43, 38, 0.08);
+      --font: "Figtree", sans-serif;
+      --display: "Fraunces", Georgia, serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background:
+        radial-gradient(120% 80% at 10% -10%, rgba(255, 255, 255, 0.7), transparent 55%),
+        radial-gradient(90% 70% at 100% 0%, rgba(180, 210, 198, 0.55), transparent 50%),
+        linear-gradient(165deg, var(--bg-top), var(--bg-bottom));
+      background-attachment: fixed;
+      min-height: 100dvh;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      width: min(440px, 100%);
+      margin: 0 auto;
+      min-height: 100dvh;
+      padding: max(1.25rem, env(safe-area-inset-top)) 1.25rem max(1.75rem, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      animation: fadeIn 0.45s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulseSoft {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.015); }
+    }
+
+    @keyframes tick {
+      from { stroke-dashoffset: 283; }
+    }
+
+    h1, h2 {
+      font-family: var(--display);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    h1 { font-size: clamp(1.75rem, 6vw, 2.15rem); line-height: 1.15; }
+    h2 { font-size: 1.35rem; }
+    p { margin: 0; color: var(--ink-soft); }
+
+    .brand {
+      font-family: var(--display);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: -0.01em;
+    }
+
+    .lead {
+      font-size: 1.05rem;
+      max-width: 28ch;
+    }
+
+    .stack { display: flex; flex-direction: column; gap: 0.85rem; }
+    .grow { flex: 1; }
+
+    .choice {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      backdrop-filter: blur(8px);
+      color: var(--ink);
+      text-align: left;
+      padding: 1.05rem 1.15rem;
+      border-radius: var(--radius);
+      font: inherit;
+      font-size: 1.05rem;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+    .choice:active { transform: scale(0.985); }
+    .choice:hover, .choice:focus-visible {
+      outline: none;
+      border-color: rgba(47, 107, 90, 0.35);
+      background: rgba(255, 255, 255, 0.9);
+    }
+    .choice small {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      border-radius: 999px;
+      padding: 0.9rem 1.25rem;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+      background: var(--accent);
+      color: #f7faf8;
+    }
+    .btn-primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink-soft);
+      border: 1px solid var(--line);
+    }
+    .btn-danger {
+      background: var(--danger-soft);
+      color: var(--warn);
+    }
+    .btn-row {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .btn-row .btn { flex: 1; min-width: 7rem; }
+
+    .linkish {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.92rem;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+      padding: 0.5rem;
+      align-self: center;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      padding: 0.95rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+    .field-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .field input, .field textarea {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font: inherit;
+      color: var(--ink);
+      padding: 0.15rem 0;
+      outline: none;
+      resize: vertical;
+    }
+    .field input::placeholder, .field textarea::placeholder {
+      color: #9aada4;
+    }
+
+    .timer-wrap {
+      display: grid;
+      place-items: center;
+      gap: 1rem;
+      padding: 1.5rem 0 0.5rem;
+    }
+    .ring {
+      width: 180px;
+      height: 180px;
+      position: relative;
+      animation: pulseSoft 3.5s ease-in-out infinite;
+    }
+    .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring circle {
+      fill: none;
+      stroke-width: 8;
+      stroke-linecap: round;
+    }
+    .ring .track { stroke: var(--accent-soft); }
+    .ring .progress {
+      stroke: var(--accent);
+      stroke-dasharray: 283;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 0.8s linear;
+    }
+    .ring-time {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-family: var(--display);
+      font-size: 2.4rem;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+
+    .note-box {
+      background: var(--surface-solid);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      color: var(--ink-soft);
+      white-space: pre-wrap;
+    }
+
+    .nav {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: auto;
+      padding-top: 0.5rem;
+    }
+    .nav button {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.45rem 0.7rem;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .nav button[aria-current="page"] {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .stat-list { display: flex; flex-direction: column; gap: 0.65rem; }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: baseline;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-num {
+      font-family: var(--display);
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+
+    .hidden { display: none !important; }
+
+    .hint {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app"></div>
+
+  <script>
+    (function () {
+      const STORAGE_KEYS = {
+        replacements: "antiDoom.replacements",
+        log: "antiDoom.log",
+        setupDone: "antiDoom.setupDone",
+      };
+      const TIMER_SECONDS = 10 * 60;
+      const MIN_CHOICES = 3;
+      const MAX_CHOICES = 5;
+
+      const app = document.getElementById("app");
+      let timerId = null;
+      let remaining = TIMER_SECONDS;
+      let activeChoice = null;
+      let sessionStartedAt = null;
+      let completedLogged = false;
+
+      function loadJSON(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
+        } catch {
+          return fallback;
+        }
+      }
+
+      function saveJSON(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+
+      function getReplacements() {
+        return loadJSON(STORAGE_KEYS.replacements, []);
+      }
+
+      function setReplacements(list) {
+        saveJSON(STORAGE_KEYS.replacements, list);
+      }
+
+      function isSetupDone() {
+        return localStorage.getItem(STORAGE_KEYS.setupDone) === "1" && getReplacements().length >= MIN_CHOICES;
+      }
+
+      function logEvent(type, extra) {
+        const log = loadJSON(STORAGE_KEYS.log, []);
+        log.push({
+          type,
+          at: new Date().toISOString(),
+          ...extra,
+        });
+        saveJSON(STORAGE_KEYS.log, log);
+      }
+
+      function stopTimer() {
+        if (timerId) {
+          clearInterval(timerId);
+          timerId = null;
+        }
+      }
+
+      function formatTime(totalSeconds) {
+        const m = Math.floor(totalSeconds / 60);
+        const s = totalSeconds % 60;
+        return m + ":" + String(s).padStart(2, "0");
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function openLinkSafely(url) {
+        if (!url) return;
+        let href = url.trim();
+        if (!/^https?:\/\//i.test(href)) href = "https://" + href;
+        try {
+          window.open(href, "_blank", "noopener,noreferrer");
+        } catch {
+          /* ignore popup blockers */
+        }
+      }
+
+      function blankChoices(count) {
+        return Array.from({ length: count }, () => ({ title: "", link: "", note: "" }));
+      }
+
+      function normalizeChoices(raw) {
+        return raw
+          .map(function (c) {
+            return {
+              title: (c.title || "").trim(),
+              link: (c.link || "").trim(),
+              note: (c.note || "").trim(),
+            };
+          })
+          .filter(function (c) { return c.title; });
+      }
+
+      function renderSetup(existing) {
+        stopTimer();
+        const initial = existing && existing.length
+          ? existing.concat(blankChoices(Math.max(0, MIN_CHOICES - existing.length))).slice(0, MAX_CHOICES)
+          : blankChoices(MIN_CHOICES);
+        const isEdit = !!existing;
+
+        app.innerHTML =
+          '<div class="brand">Anti-Doomscroll</div>' +
+          "<h1>" + (isEdit ? "Edit your replacements" : "What would you rather do?") + "</h1>" +
+          '<p class="lead">Add 3–5 better options for when the scroll itch hits. Links and notes are optional.</p>' +
+          '<form id="setup-form" class="stack grow"></form>' +
+          '<p class="hint" id="setup-hint"></p>' +
+          '<div class="btn-row">' +
+            (isEdit ? '<button type="button" class="btn btn-ghost" id="cancel-edit">Cancel</button>' : "") +
+            '<button type="submit" form="setup-form" class="btn btn-primary" id="save-setup">Save</button>' +
+          "</div>";
+
+        const form = document.getElementById("setup-form");
+        initial.forEach(function (choice, i) {
+          const field = document.createElement("div");
+          field.className = "field";
+          field.innerHTML =
+            '<span class="field-label">Option ' + (i + 1) + "</span>" +
+            '<input name="title" data-i="' + i + '" type="text" maxlength="60" placeholder="e.g. Stretch for 10 minutes" value="' + escapeHtml(choice.title) + '" required />' +
+            '<input name="link" data-i="' + i + '" type="url" placeholder="Optional link (https://…)" value="' + escapeHtml(choice.link) + '" />' +
+            '<input name="note" data-i="' + i + '" type="text" maxlength="120" placeholder="Optional short note" value="' + escapeHtml(choice.note) + '" />';
+          form.appendChild(field);
+        });
+
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.className = "btn btn-ghost";
+        addBtn.id = "add-choice";
+        addBtn.textContent = "Add another option";
+        form.appendChild(addBtn);
+
+        function currentDraft() {
+          const titles = form.querySelectorAll('input[name="title"]');
+          const links = form.querySelectorAll('input[name="link"]');
+          const notes = form.querySelectorAll('input[name="note"]');
+          const out = [];
+          for (let i = 0; i < titles.length; i++) {
+            out.push({
+              title: titles[i].value,
+              link: links[i].value,
+              note: notes[i].value,
+            });
+          }
+          return out;
+        }
+
+        function refreshAddButton() {
+          const n = form.querySelectorAll('input[name="title"]').length;
+          addBtn.classList.toggle("hidden", n >= MAX_CHOICES);
+        }
+        refreshAddButton();
+
+        addBtn.addEventListener("click", function () {
+          const n = form.querySelectorAll('input[name="title"]').length;
+          if (n >= MAX_CHOICES) return;
+          const field = document.createElement("div");
+          field.className = "field";
+          field.innerHTML =
+            '<span class="field-label">Option ' + (n + 1) + "</span>" +
+            '<input name="title" type="text" maxlength="60" placeholder="e.g. Call a friend" />' +
+            '<input name="link" type="url" placeholder="Optional link (https://…)" />' +
+            '<input name="note" type="text" maxlength="120" placeholder="Optional short note" />';
+          form.insertBefore(field, addBtn);
+          refreshAddButton();
+          field.querySelector('input[name="title"]').focus();
+        });
+
+        const cancel = document.getElementById("cancel-edit");
+        if (cancel) cancel.addEventListener("click", function () { renderHome(); });
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          const cleaned = normalizeChoices(currentDraft());
+          const hint = document.getElementById("setup-hint");
+          if (cleaned.length < MIN_CHOICES) {
+            hint.textContent = "Please add at least " + MIN_CHOICES + " options with a title.";
+            return;
+          }
+          if (cleaned.length > MAX_CHOICES) {
+            hint.textContent = "Keep it to " + MAX_CHOICES + " options or fewer.";
+            return;
+          }
+          setReplacements(cleaned);
+          localStorage.setItem(STORAGE_KEYS.setupDone, "1");
+          renderHome();
+        });
+      }
+
+      function renderHome() {
+        stopTimer();
+        activeChoice = null;
+        const choices = getReplacements();
+        if (!isSetupDone()) {
+          renderSetup(null);
+          return;
+        }
+
+        app.innerHTML =
+          '<div class="brand">Anti-Doomscroll</div>' +
+          "<h1>What are you looking for right now?</h1>" +
+          '<p class="lead">Pick one. Give it ten minutes before you scroll.</p>' +
+          '<div class="stack grow" id="choices"></div>' +
+          '<button type="button" class="linkish" id="scroll-anyway">Scroll anyway</button>' +
+          '<nav class="nav" aria-label="App">' +
+            '<button type="button" aria-current="page">Home</button>' +
+            '<button type="button" id="go-stats">Stats</button>' +
+            '<button type="button" id="go-edit">Edit</button>' +
+          "</nav>";
+
+        const list = document.getElementById("choices");
+        choices.forEach(function (choice, index) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "choice";
+          btn.innerHTML =
+            escapeHtml(choice.title) +
+            (choice.note ? "<small>" + escapeHtml(choice.note) + "</small>" : "");
+          btn.addEventListener("click", function () { startSession(choice, index); });
+          list.appendChild(btn);
+        });
+
+        document.getElementById("scroll-anyway").addEventListener("click", function () {
+          logEvent("scroll_anyway", {});
+          app.innerHTML =
+            '<div class="brand">Anti-Doomscroll</div>' +
+            "<h1>Alright.</h1>" +
+            '<p class="lead">You chose to scroll. No lecture — just a note for later.</p>' +
+            '<div class="grow"></div>' +
+            '<button type="button" class="btn btn-primary" id="back-home">Back</button>';
+          document.getElementById("back-home").addEventListener("click", renderHome);
+        });
+
+        document.getElementById("go-stats").addEventListener("click", renderStats);
+        document.getElementById("go-edit").addEventListener("click", function () {
+          renderSetup(getReplacements());
+        });
+      }
+
+      function startSession(choice, index) {
+        stopTimer();
+        activeChoice = choice;
+        remaining = TIMER_SECONDS;
+        sessionStartedAt = Date.now();
+        completedLogged = false;
+
+        logEvent("replacement_chosen", {
+          title: choice.title,
+          index: index,
+          hadLink: !!choice.link,
+          hadNote: !!choice.note,
+        });
+
+        if (choice.link) openLinkSafely(choice.link);
+
+        renderTimer();
+        timerId = setInterval(function () {
+          remaining -= 1;
+          if (remaining <= 0) {
+            remaining = 0;
+            stopTimer();
+            if (!completedLogged) {
+              completedLogged = true;
+              logEvent("replacement_completed", {
+                title: choice.title,
+                index: index,
+                durationSec: TIMER_SECONDS,
+              });
+            }
+          }
+          updateTimerUI();
+        }, 1000);
+      }
+
+      function renderTimer() {
+        const choice = activeChoice;
+        app.innerHTML =
+          '<div class="brand">Anti-Doomscroll</div>' +
+          "<h1>" + escapeHtml(choice.title) + "</h1>" +
+          '<p class="lead">Ten quiet minutes. Stay with it.</p>' +
+          '<div class="timer-wrap grow">' +
+            '<div class="ring" aria-live="polite">' +
+              '<svg viewBox="0 0 100 100" aria-hidden="true">' +
+                '<circle class="track" cx="50" cy="50" r="45"></circle>' +
+                '<circle class="progress" id="progress-ring" cx="50" cy="50" r="45"></circle>' +
+              "</svg>" +
+              '<div class="ring-time" id="time-label">' + formatTime(remaining) + "</div>" +
+            "</div>" +
+            (choice.note ? '<div class="note-box">' + escapeHtml(choice.note) + "</div>" : "") +
+            (choice.link ? '<p class="hint">Link opened in a new tab (if allowed).</p>' : "") +
+          "</div>" +
+          '<div class="btn-row">' +
+            '<button type="button" class="btn btn-ghost" id="end-early">End early</button>' +
+            '<button type="button" class="btn btn-primary" id="done-btn">I did it</button>' +
+          "</div>" +
+          '<button type="button" class="linkish" id="scroll-anyway-timer">Scroll anyway</button>';
+
+        updateTimerUI();
+
+        document.getElementById("end-early").addEventListener("click", function () {
+          finishIncomplete("ended_early");
+        });
+        document.getElementById("done-btn").addEventListener("click", function () {
+          if (!completedLogged) {
+            completedLogged = true;
+            logEvent("replacement_completed", {
+              title: choice.title,
+              durationSec: Math.round((Date.now() - sessionStartedAt) / 1000),
+            });
+          }
+          stopTimer();
+          showDone(true);
+        });
+        document.getElementById("scroll-anyway-timer").addEventListener("click", function () {
+          finishIncomplete("scroll_anyway");
+        });
+      }
+
+      function updateTimerUI() {
+        const label = document.getElementById("time-label");
+        const ring = document.getElementById("progress-ring");
+        if (!label || !ring) return;
+        label.textContent = remaining === 0 ? "Done" : formatTime(remaining);
+        const offset = 283 * (1 - remaining / TIMER_SECONDS);
+        ring.style.strokeDashoffset = String(offset);
+      }
+
+      function finishIncomplete(type) {
+        stopTimer();
+        const elapsed = sessionStartedAt ? Math.round((Date.now() - sessionStartedAt) / 1000) : 0;
+        logEvent(type === "scroll_anyway" ? "scroll_anyway" : "replacement_incomplete", {
+          title: activeChoice ? activeChoice.title : null,
+          elapsedSec: elapsed,
+          reason: type,
+        });
+        if (type === "scroll_anyway") {
+          app.innerHTML =
+            '<div class="brand">Anti-Doomscroll</div>' +
+            "<h1>Alright.</h1>" +
+            '<p class="lead">Logged. Come back anytime you want a better option.</p>' +
+            '<div class="grow"></div>' +
+            '<button type="button" class="btn btn-primary" id="back-home">Back</button>';
+          document.getElementById("back-home").addEventListener("click", renderHome);
+        } else {
+          showDone(false);
+        }
+      }
+
+      function showDone(completed) {
+        app.innerHTML =
+          '<div class="brand">Anti-Doomscroll</div>' +
+          "<h1>" + (completed ? "Nice work." : "Paused.") + "</h1>" +
+          '<p class="lead">' +
+            (completed
+              ? "You chose something better than the scroll. That counts."
+              : "No shame in stopping early. The log still noticed the try.") +
+          "</p>" +
+          '<div class="grow"></div>' +
+          '<button type="button" class="btn btn-primary" id="back-home">Back home</button>';
+        document.getElementById("back-home").addEventListener("click", renderHome);
+      }
+
+      function startOfDay(d) {
+        const x = new Date(d);
+        x.setHours(0, 0, 0, 0);
+        return x;
+      }
+
+      function renderStats() {
+        stopTimer();
+        const log = loadJSON(STORAGE_KEYS.log, []);
+        const today = startOfDay(new Date());
+        const cutoff = new Date(today);
+        cutoff.setDate(cutoff.getDate() - 6);
+
+        const recent = log.filter(function (e) {
+          const t = new Date(e.at);
+          return !isNaN(t) && t >= cutoff;
+        });
+
+        let chosen = 0;
+        let completed = 0;
+        let incomplete = 0;
+        let scrollAnyway = 0;
+        const byDay = {};
+
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(cutoff);
+          d.setDate(cutoff.getDate() + i);
+          byDay[d.toDateString()] = { chosen: 0, completed: 0, scroll: 0 };
+        }
+
+        recent.forEach(function (e) {
+          const dayKey = startOfDay(new Date(e.at)).toDateString();
+          if (!byDay[dayKey]) byDay[dayKey] = { chosen: 0, completed: 0, scroll: 0 };
+          if (e.type === "replacement_chosen") {
+            chosen += 1;
+            byDay[dayKey].chosen += 1;
+          } else if (e.type === "replacement_completed") {
+            completed += 1;
+            byDay[dayKey].completed += 1;
+          } else if (e.type === "replacement_incomplete") {
+            incomplete += 1;
+          } else if (e.type === "scroll_anyway") {
+            scrollAnyway += 1;
+            byDay[dayKey].scroll += 1;
+          }
+        });
+
+        const dayRows = Object.keys(byDay)
+          .sort(function (a, b) { return new Date(b) - new Date(a); })
+          .map(function (key) {
+            const d = byDay[key];
+            const label = new Date(key).toLocaleDateString(undefined, {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            });
+            return (
+              '<div class="stat-row">' +
+                "<div>" +
+                  "<strong>" + label + "</strong>" +
+                  '<div class="hint">' + d.chosen + " chosen · " + d.completed + " completed · " + d.scroll + " scrolled</div>" +
+                "</div>" +
+                '<div class="stat-num">' + d.completed + "</div>" +
+              "</div>"
+            );
+          })
+          .join("");
+
+        app.innerHTML =
+          '<div class="brand">Anti-Doomscroll</div>' +
+          "<h1>Last 7 days</h1>" +
+          '<p class="lead">A quiet look at how often you chose something else.</p>' +
+          '<div class="stat-list">' +
+            '<div class="stat-row"><div>Replacements chosen</div><div class="stat-num">' + chosen + "</div></div>" +
+            '<div class="stat-row"><div>Completed</div><div class="stat-num">' + completed + "</div></div>" +
+            '<div class="stat-row"><div>Ended early</div><div class="stat-num">' + incomplete + "</div></div>" +
+            '<div class="stat-row"><div>Scroll anyway</div><div class="stat-num">' + scrollAnyway + "</div></div>" +
+          "</div>" +
+          "<h2>By day</h2>" +
+          (recent.length
+            ? '<div class="stat-list">' + dayRows + "</div>"
+            : '<p class="empty">No actions yet this week.</p>') +
+          '<nav class="nav" aria-label="App">' +
+            '<button type="button" id="go-home">Home</button>' +
+            '<button type="button" aria-current="page">Stats</button>' +
+            '<button type="button" id="go-edit">Edit</button>' +
+          "</nav>";
+
+        document.getElementById("go-home").addEventListener("click", renderHome);
+        document.getElementById("go-edit").addEventListener("click", function () {
+          renderSetup(getReplacements());
+        });
+      }
+
+      if (isSetupDone()) renderHome();
+      else renderSetup(null);
+    })();
+  </script>
+</body>
+</html>
